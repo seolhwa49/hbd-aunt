@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สุขสันต์วันเกิดคุณน้าที่รัก 🐱✨</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt & Mitr for cute Thai typography) -->
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JS Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Tone.js for web audio music synthesis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- Firebase Cloud Storage SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Config
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cat-hbd-aunt';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : { apiKey: "demo", authDomain: "demo.firebaseapp.com", projectId: "demo" };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.appId = appId;
+        window.addDoc = addDoc;
+        window.collection = collection;
+
+        // Auto authenticate before accessing database
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.log("Auth init:", err);
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                listenToWishes(db, appId);
+            }
+        });
+
+        initAuth();
+
+        // Listen for real-time wishes from all users
+        function listenToWishes(db, appId) {
+            const wishesCol = collection(db, 'artifacts', appId, 'public', 'data', 'wishes');
+            onSnapshot(wishesCol, (snapshot) => {
+                const board = document.getElementById('wishBoard');
+                if (!board) return;
+                
+                board.innerHTML = ''; // Clear existing list
+
+                if (snapshot.empty) {
+                    board.innerHTML = `
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-amber-100 relative col-span-full text-center py-6">
+                            <p class="text-xs text-gray-400 font-medium">ยังไม่มีคำอวยพรเพิ่มเติม เขียนอวยพรเป็นคนแรกให้คุณน้ากันเลยค่ะ! 🐱💖</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    const newCard = document.createElement('div');
+                    newCard.className = 'bg-white p-4 rounded-2xl shadow-sm border border-amber-100 relative animate-float';
+                    newCard.innerHTML = `
+                        <span class="absolute top-3 right-3 text-rose-400 text-xs"><i class="fa-solid fa-heart"></i></span>
+                        <p class="text-xs text-rose-500 font-bold mb-1">จาก: ${escapeHtml(data.name || 'ผู้หวังดี')}</p>
+                        <p class="text-sm text-gray-700">${escapeHtml(data.text || '')}</p>
+                    `;
+                    board.appendChild(newCard);
+                });
+            }, (error) => {
+                console.error("Error listening to wishes:", error);
+            });
+        }
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pastelPink: '#FFD1DC',
+                        pastelOrange: '#FFE5EC',
+                        pastelPeach: '#FFDAB9',
+                        pastelCream: '#FFF9F0',
+                        warmOrange: '#FF9EAA',
+                        catAccent: '#FF7B54'
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                        mitr: ['Mitr', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFE5EC 50%, #FFF9F0 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Custom Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+        }
+
+        @keyframes tailWag {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(15deg); }
+        }
+
+        @keyframes pulseHeart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes bounceSlow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-tail { animation: tailWag 1.5s ease-in-out infinite; transform-origin: bottom left; }
+        .animate-heart { animation: pulseHeart 1.2s ease-in-out infinite; }
+        .animate-bounce-slow { animation: bounceSlow 2s ease-in-out infinite; }
+
+        /* Card Flip Effect */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFF9F0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FFBFA9;
+            border-radius: 10px;
+        }
+
+        /* Floating background items */
+        .bg-paw {
+            position: absolute;
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="relative text-gray-700 pb-12">
+
+    <!-- Background Paws Decoration -->
+    <div class="bg-paw top-10 left-10 text-6xl text-pink-400 rotate-12"><i class="fa-solid fa-paw"></i></div>
+    <div class="bg-paw top-1/4 right-12 text-7xl text-orange-400 -rotate-12"><i class="fa-solid fa-paw"></i></div>
+    <div class="bg-paw bottom-1/3 left-8 text-8xl text-rose-300 rotate-45"><i class="fa-solid fa-paw"></i></div>
+    <div class="bg-paw bottom-10 right-20 text-6xl text-amber-300 -rotate-45"><i class="fa-solid fa-paw"></i></div>
+
+    <!-- Main Container -->
+    <div class="max-w-4xl mx-auto px-4 py-8 relative z-10">
+
+        <!-- Header Banner -->
+        <header class="text-center mb-8 animate-float">
+            <div class="inline-block bg-white/80 backdrop-blur-md px-6 py-2 rounded-full shadow-md mb-3 border border-pink-200">
+                <span class="text-catAccent font-semibold text-sm md:text-base">
+                    <i class="fa-solid fa-sparkles text-amber-400 mr-2"></i> Happy Birthday to My Dearest Aunt! <i class="fa-solid fa-heart text-rose-400 ml-1"></i>
+                </span>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-rose-500 font-mitr tracking-wide drop-shadow-sm">
+                สุขสันต์วันเกิดคุณน้าที่รัก 🐱🎂
+            </h1>
+            <p class="text-gray-600 mt-2 text-sm md:text-base">
+                ขอให้วันเกิดปีนี้เต็มไปด้วยความสุข รอยยิ้ม และความน่ารักสดใสเหมือนน้องแมวเลยนะคะ!
+            </p>
+        </header>
+
+        <!-- Audio & Sound Control Bar -->
+        <div class="flex justify-center items-center gap-3 mb-10">
+            <button id="bgmBtn" onclick="toggleBGM()" class="flex items-center gap-2 bg-white/90 hover:bg-rose-50 border border-rose-300 text-rose-600 px-5 py-2.5 rounded-full shadow-sm transition-all duration-300 font-medium active:scale-95">
+                <i id="bgmIcon" class="fa-solid fa-music text-rose-500"></i>
+                <span id="bgmText">เปิดเพลงวันเกิด 🎵</span>
+            </button>
+            <button onclick="triggerConfetti()" class="flex items-center gap-2 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 text-white px-5 py-2.5 rounded-full shadow-sm transition-all duration-300 font-medium active:scale-95">
+                <i class="fa-solid fa-gift"></i>
+                <span>จุดพลุฉลอง 🎉</span>
+            </button>
+        </div>
+
+        <!-- Interactive Birthday Card Section -->
+        <section class="mb-14">
+            <div class="text-center mb-4">
+                <span class="bg-rose-100 text-rose-600 text-xs px-3 py-1 rounded-full font-medium">✨ แตะที่การ์ดเพื่อเปิดดูคำอวยพรพิเศษ ✨</span>
+            </div>
+
+            <div class="perspective-1000 max-w-lg mx-auto h-[420px] md:h-[450px] cursor-pointer" onclick="flipCard()">
+                <div id="cardInner" class="relative w-full h-full duration-700 transform-style-3d shadow-xl rounded-3xl border-4 border-white">
+                    
+                    <!-- Card Front -->
+                    <div class="absolute w-full h-full backface-hidden bg-gradient-to-br from-rose-100 via-pink-50 to-orange-100 rounded-3xl p-6 flex flex-col justify-between items-center text-center overflow-hidden">
+                        <div class="absolute top-3 right-4 text-3xl opacity-20"><i class="fa-solid fa-cat"></i></div>
+                        <div class="absolute bottom-3 left-4 text-3xl opacity-20"><i class="fa-solid fa-heart"></i></div>
+                        
+                        <div class="mt-4">
+                            <span class="bg-white/80 text-rose-500 text-xs font-semibold px-4 py-1.5 rounded-full shadow-sm">SPECIAL CARD FOR AUNT</span>
+                            <h2 class="text-2xl md:text-3xl font-bold font-mitr text-gray-800 mt-4">การ์ดอวยพรวันเกิดสุดน่ารัก</h2>
+                        </div>
+
+                        <!-- Cute Cat Illustration & Cake -->
+                        <div class="relative my-4">
+                            <!-- Cat graphic built with SVG/HTML -->
+                            <div class="w-36 h-36 md:w-44 md:h-44 bg-white/70 rounded-full flex items-center justify-center shadow-inner relative">
+                                <svg class="w-28 h-28 md:w-36 md:h-36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Cat Ears -->
+                                    <path d="M50 70 L30 20 L80 50 Z" fill="#FFB6C1" stroke="#FF7B54" stroke-width="4"/>
+                                    <path d="M150 70 L170 20 L120 50 Z" fill="#FFB6C1" stroke="#FF7B54" stroke-width="4"/>
+                                    <path d="M55 63 L42 32 L75 50 Z" fill="#FFD1DC"/>
+                                    <path d="M145 63 L158 32 L125 50 Z" fill="#FFD1DC"/>
+                                    <!-- Cat Head -->
+                                    <circle cx="100" cy="100" r="60" fill="#FFE5EC" stroke="#FF7B54" stroke-width="4"/>
+                                    <!-- Eyes -->
+                                    <ellipse cx="78" cy="95" rx="7" ry="10" fill="#333"/>
+                                    <ellipse cx="122" cy="95" rx="7" ry="10" fill="#333"/>
+                                    <circle cx="80" cy="92" r="3" fill="white"/>
+                                    <circle cx="124" cy="92" r="3" fill="white"/>
+                                    <!-- Cheeks -->
+                                    <circle cx="65" cy="110" r="8" fill="#FF9EAA" opacity="0.6"/>
+                                    <circle cx="135" cy="110" r="8" fill="#FF9EAA" opacity="0.6"/>
+                                    <!-- Nose & Mouth -->
+                                    <polygon points="96,105 104,105 100,110" fill="#FF7B54"/>
+                                    <path d="M92 113 Q100 120 100 113 Q100 120 108 113" stroke="#333" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                    <!-- Whiskers -->
+                                    <line x1="45" y1="95" x2="65" y2="100" stroke="#FF7B54" stroke-width="3" stroke-linecap="round"/>
+                                    <line x1="40" y1="110" x2="63" y2="108" stroke="#FF7B54" stroke-width="3" stroke-linecap="round"/>
+                                    <line x1="155" y1="95" x2="135" y2="100" stroke="#FF7B54" stroke-width="3" stroke-linecap="round"/>
+                                    <line x1="160" y1="110" x2="137" y2="108" stroke="#FF7B54" stroke-width="3" stroke-linecap="round"/>
+                                    <!-- Party Hat -->
+                                    <polygon points="100,15 80,55 120,55" fill="#FFD166"/>
+                                    <circle cx="100" cy="15" r="6" fill="#FF477E"/>
+                                    <line x1="83" y1="45" x2="117" y2="45" stroke="#4EA8DE" stroke-width="4"/>
+                                </svg>
+                            </div>
+                            <div class="absolute -bottom-2 -right-2 bg-amber-100 text-amber-600 border border-amber-300 text-xs px-2.5 py-1 rounded-full font-bold shadow animate-bounce-slow">
+                                🎂 Click Open!
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <p class="text-gray-600 font-medium text-sm">น้องแมวถือการ์ดอวยพรมาส่งให้คุณน้าค่ะ</p>
+                            <p class="text-xs text-rose-400 mt-1">(คลิกเพื่อเปิดอ่านคำอวยพรข้างใน)</p>
+                        </div>
+                    </div>
+
+                    <!-- Card Inside -->
+                    <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-white rounded-3xl p-6 md:p-8 flex flex-col justify-between text-left border-2 border-rose-200">
+                        <div>
+                            <div class="flex justify-between items-center border-b border-pink-100 pb-3 mb-4">
+                                <h3 class="font-mitr font-bold text-xl text-rose-500 flex items-center gap-2">
+                                    <i class="fa-solid fa-heart text-rose-400"></i> สุขสันต์วันเกิดค่ะคุณน้าที่รัก 🐱✨
+                                </h3>
+                                <span class="text-xs text-rose-400 font-medium">Happy Birthday!</span>
+                            </div>
+                            <div class="space-y-3 text-gray-700 text-sm md:text-base leading-relaxed overflow-y-auto max-h-[260px] pr-2">
+                                <p>🌸 <b>สุขสันต์วันเกิดนะคะคุณน้า!</b> ขอให้ปีนี้เป็นปีที่เต็มไปด้วยความสุข รอยยิ้ม และความอบอุ่นในทุกๆ วันค่ะ</p>
+                                <p>💖 ขอให้คุณน้ามีสุขภาพร่างกายที่แข็งแรง สดใส สบายใจ ไม่มีเรื่องเครียด มีแต่พลังบวกและสิ่งดีๆ เข้ามาหาเสมอเลยนะคะ</p>
+                                <p>🐱 ขอให้วันเกิดปีนี้สบายกายสบายใจ ได้พักผ่อนเต็มที่ มีแต่ความสุข นุ่มฟูเหมือนได้นั่งลูบขนแมวอ้วนในวันสบายๆ เลยค่ะ</p>
+                                <p>🎁 ขอบคุณคุณน้าที่น่ารัก ใจดี และคอยมอบความหวังดีให้หลานเสมอ ขอให้มีความสุขมากๆ ในทุกๆ วันนะคะ!</p>
+                                <p class="text-right font-medium text-rose-500 pt-2">- ด้วยรักและเคารพสุดหัวใจจากหลานรัก ❤️🐾 -</p>
+                            </div>
+                        </div>
+                        <div class="text-center pt-2 border-t border-gray-100">
+                            <span class="text-xs text-gray-400"><i class="fa-solid fa-rotate-left mr-1"></i> คลิกการ์ดอีกครั้งเพื่อปิด</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Pet The Cat Game Section -->
+        <section class="bg-white/80 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-lg border border-pink-100 mb-12 relative overflow-hidden">
+            <div class="max-w-xl mx-auto text-center">
+                <span class="bg-orange-100 text-orange-600 text-xs px-3 py-1 rounded-full font-medium">🐾 Mini Interactive Game</span>
+                <h2 class="text-2xl font-bold font-mitr text-gray-800 mt-2 mb-1">โซนลูบหัวแมวเฒ่ารับพรวันเกิด ✨</h2>
+                <p class="text-gray-500 text-sm mb-6">ลองเอานิ้วแตะหรือคลิกลูบหัวน้องแมวสิคะ! น้องจะส่งเสียงเหมียวและปล่อยความรักมาให้คุณน้า</p>
+
+                <!-- Interactive Cat Mascot using Uploaded Cat Image -->
+                <div class="relative inline-block my-2">
+                    <!-- Floating Heart Canvas Overlay for pet effect -->
+                    <div id="heartContainer" class="absolute inset-0 pointer-events-none z-30"></div>
+                    
+                    <!-- Cat Body Interactive Component -->
+                    <div id="catMascot" onclick="petCat(event)" class="cursor-pointer select-none transform transition-transform duration-200 active:scale-95 group relative inline-block">
+                        <!-- Speech Bubble -->
+                        <div id="catBubble" class="absolute -top-12 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md transition-all duration-300 opacity-90 group-hover:scale-105 whitespace-nowrap z-20">
+                            คลิกลูบหัวหนูสิคะเหมียว! 🐾
+                        </div>
+
+                        <!-- Real Cat Image with Decorative Frame -->
+                        <div class="w-56 h-56 md:w-64 md:h-64 rounded-full p-2 bg-gradient-to-tr from-amber-300 via-rose-300 to-pink-300 shadow-xl border-4 border-white relative overflow-hidden flex items-center justify-center">
+                            <img src="https://i.ibb.co/60DTyLN7/82787958-a6df-467d-802c-0ae0a58434e5.jpg" alt="Your Cute Cat" class="w-full h-full object-cover rounded-full group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x400/FFD1DC/FF7B54?text=Cute+Cat'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pet Counter Display -->
+                <div class="mt-4 flex justify-center items-center gap-6">
+                    <div class="bg-orange-50 border border-orange-200 px-4 py-1.5 rounded-2xl text-xs text-orange-700 font-medium">
+                        ลูบรับพรไปแล้ว: <span id="petCount" class="font-bold text-base text-rose-500">0</span> ครั้ง ❤️
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Random Cat Blessing Generator Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <!-- Left Box: Random Blessing Card -->
+            <div class="bg-gradient-to-br from-white to-pink-50 rounded-3xl p-6 shadow-md border border-pink-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-paw"></i>
+                        </div>
+                        <h3 class="font-mitr font-semibold text-lg text-gray-800">กล่องสุ่มคำอวยพรจากน้องแมว</h3>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">กดปุ่มด้านล่างเพื่อรับคำอวยพรและพลังบวกประจำวันจากแก๊งเหมียวค่ะ</p>
+                    
+                    <div id="blessingBox" class="bg-white p-5 rounded-2xl border border-pink-100 shadow-sm min-h-[110px] flex items-center justify-center text-center transition-all duration-300">
+                        <p class="text-rose-600 font-medium text-sm md:text-base leading-relaxed">
+                            "กดปุ่มด้านล่างเพื่อสุ่มจับคำอวยพรสิคะเหมียว! 🐾"
+                        </p>
+                    </div>
+                </div>
+
+                <button onclick="generateBlessing()" class="mt-5 w-full bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-medium py-2.5 rounded-xl shadow-sm transition duration-200 active:scale-98 flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> สุ่มรับคำอวยพรน่ารักๆ
+                </button>
+            </div>
+
+            <!-- Right Box: Leave a Birthday Wish / Warm Messages -->
+            <div class="bg-white/90 rounded-3xl p-6 shadow-md border border-pink-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-pen-nib"></i>
+                        </div>
+                        <h3 class="font-mitr font-semibold text-lg text-gray-800">ส่งข้อความถึงคุณน้า</h3>
+                    </div>
+                    
+                    <div class="space-y-3 mb-4">
+                        <input type="text" id="senderName" placeholder="ชื่อของคุณ" class="w-full text-xs md:text-sm px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-rose-400 transition">
+                        <textarea id="wishText" rows="2" placeholder="พิมพ์ข้อความอวยพรเพิ่มเติมตรงนี้..." class="w-full text-xs md:text-sm px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-rose-400 transition resize-none"></textarea>
+                    </div>
+                </div>
+
+                <button onclick="addWishMessage()" class="w-full bg-amber-400 hover:bg-amber-500 text-amber-900 font-semibold py-2.5 rounded-xl shadow-sm transition duration-200 active:scale-98 flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-paper-plane"></i> แปะโน้ตอวยพร 📌
+                </button>
+            </div>
+        </section>
+
+        <!-- Pinned Messages Board -->
+        <section class="bg-amber-50/60 rounded-3xl p-6 border border-amber-100/80 shadow-sm mb-12">
+            <h3 class="font-mitr font-bold text-lg text-amber-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-note-sticky text-amber-500"></i> บอร์ดข้อความอวยพรความสุข (อัปเดตสดๆ เรียลไทม์) 💌
+            </h3>
+            <div id="wishBoard" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-amber-100 relative text-center py-6 col-span-full">
+                    <p class="text-xs text-gray-400 font-medium">กำลังโหลดคำอวยพรจากทุกคน... 🐾</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8 Cats Birthday Gallery (ONLY THIS ONE SECTION FOR 8 CATS) -->
+        <section class="text-center mb-12">
+            <h3 class="font-mitr font-semibold text-lg text-gray-700 mb-4">แก๊งน้องแมวทั้ง 8 ตัว มาร่วมอวยพรวันเกิดคุณน้า 🐱🎉</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/FqDW4bvc/0216910f-94e5-4950-9c6f-3dbefcac266d.jpg" alt="Cat 1" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFD1DC/FF7B54?text=Cat+1'">
+                    <p class="text-xs font-medium text-gray-600">1. สามสี </p>
+                </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/cKYTjqyd/577324692-3304947329670466-519929313806817186-n.jpg" alt="Cat 2" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFD1DC/FF7B54?text=Cat+2'">
+                    <p class="text-xs font-medium text-gray-600">2. พี่ชาโคล </p>
+                </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/zHH4gV14/530540934-3212380895593777-541262579538817595-n.jpg" alt="Cat 3" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFDAB9/FF7B54?text=Cat+3'">
+                    <p class="text-xs font-medium text-gray-600">3. พี่ส้มฉุน </p>
+                </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/ymDrp6PZ/b908f4ed-2e90-4fe5-a0cb-26cc08a4e7ae.jpg" alt="Cat 4" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFE5EC/FF7B54?text=Cat+4'">
+                    <p class="text-xs font-medium text-gray-600">4. น้องสีแหวด (น้ำหวาน)</p>
+                </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/9kt6H1d6/cbbd0243-7f52-45cc-be76-c036052f7d1c.jpg" alt="Cat 5" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFF9F0/FF7B54?text=Cat+5'">
+                    <p class="text-xs font-medium text-gray-600">5. พี่ส้มซ่า </p>
+                </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/4wRjfbNJ/0a7ca251-edca-4418-a6a3-54b9dc8ed302.jpg" alt="Cat 6" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFE5EC/FF7B54?text=Cat+6'">
+                    <p class="text-xs font-medium text-gray-600">6. น้องรวย </p>
+                </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/Y5GWvdN/785561355-3622876964544166-6674014056143809347-n.jpg" alt="Cat 7" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFD1DC/FF7B54?text=Cat+7'">
+                    <p class="text-xs font-medium text-gray-600">7. น้องเก้า </p>
+                </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-pink-100 hover:scale-105 transition duration-300">
+                    <img src="https://i.ibb.co/S44GP2Vs/754798368-3584143658417497-3973518710464926058-n.jpg" alt="Cat 8" class="w-full h-28 object-cover rounded-xl mb-2" onerror="this.src='https://placehold.co/300x200/FFDAB9/FF7B54?text=Cat+8'">
+                    <p class="text-xs font-medium text-gray-600">8. น้องลิซ่า </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-xs text-gray-400">
+            <p>Made with ❤️ for Dearest Aunt | Happy Birthday by SunSun</p>
+        </footer>
+
+    </div>
+
+    <!-- Custom Toast / Notification Box -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gray-800 text-white text-xs md:text-sm px-5 py-3 rounded-2xl shadow-xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-bell text-amber-400"></i>
+        <span id="toastMsg">ข้อความแจ้งเตือน</span>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // State Variables
+        let isCardFlipped = false;
+        let petCount = 0;
+        let isPlayingBGM = false;
+        let synth = null;
+        let bgmSequence = null;
+
+        // Cat Blessings Database
+        const catBlessings = [
+            "🐾 ขอให้คุณน้าทานอาหารอร่อยทุกมื้อ หลับสนิทนอนสบายแบบน้องแมวนะคะ!",
+            "🐟 ขอให้โชคลาภ เงินทอง ไหลมาเทมาเหมือนขนน้องแมวที่ร่วง... เอ้ย มั่งคั่งร่ำรวยค่ะ!",
+            "✨ ขอให้ทุกวันของคุณน้าเต็มไปด้วยความสดใส สดชื่น ไร้ความเครียดใดยามกวนใจ",
+            "💖 น้องแมวขอมอบพรให้คุณน้ามีสุขภาพแข็งแรง อ่อนเยาว์ หน้าเด็กตลอดไปค่ะ!",
+            "🌸 ขอให้ปีนี้คุณน้าประสบความสำเร็จในทุกๆ เรื่องที่ตั้งใจไว้นะคะ เหมียว~",
+            "🎉 ขอให้มีแต่คนรัก คนเอ็นดู เมตตา อบอุ่นหัวใจในทุกๆ วันค่ะ!"
+        ];
+
+        // Cat Sound Synthesis using Web Audio API via Tone.js or Native Audio Synth
+        function playMeowSound() {
+            try {
+                // Audio Context simple synth for Meow sound effect
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                
+                // Frequency slide to simulate a cute "Meow~" pitch
+                const now = ctx.currentTime;
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.35);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        // Happy Birthday Song Synthesizer using Tone.js
+        function setupBGM() {
+            if (synth) return;
+
+            synth = new Tone.Synth({
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
+            }).toDestination();
+
+            // Notes for "Happy Birthday to You"
+            const notes = [
+                { note: "C4", duration: "8n", time: 0 },
+                { note: "C4", duration: "8n", time: "0:0:2" },
+                { note: "D4", duration: "4n", time: "0:1:0" },
+                { note: "C4", duration: "4n", time: "0:2:0" },
+                { note: "F4", duration: "4n", time: "0:3:0" },
+                { note: "E4", duration: "2n", time: "1:0:0" },
+
+                { note: "C4", duration: "8n", time: "1:2:0" },
+                { note: "C4", duration: "8n", time: "1:2:2" },
+                { note: "D4", duration: "4n", time: "1:3:0" },
+                { note: "C4", duration: "4n", time: "2:0:0" },
+                { note: "G4", duration: "4n", time: "2:1:0" },
+                { note: "F4", duration: "2n", time: "2:2:0" },
+
+                { note: "C4", duration: "8n", time: "3:0:0" },
+                { note: "C4", duration: "8n", time: "3:0:2" },
+                { note: "C5", duration: "4n", time: "3:1:0" },
+                { note: "A4", duration: "4n", time: "3:2:0" },
+                { note: "F4", duration: "4n", time: "3:3:0" },
+                { note: "E4", duration: "4n", time: "4:0:0" },
+                { note: "D4", duration: "4n", time: "4:1:0" },
+
+                { note: "A#4", duration: "8n", time: "4:3:0" },
+                { note: "A#4", duration: "8n", time: "4:3:2" },
+                { note: "A4", duration: "4n", time: "5:0:0" },
+                { note: "F4", duration: "4n", time: "5:1:0" },
+                { note: "G4", duration: "4n", time: "5:2:0" },
+                { note: "F4", duration: "2n", time: "5:3:0" }
+            ];
+
+            bgmSequence = new Tone.Part((time, value) => {
+                synth.triggerAttackRelease(value.note, value.duration, time);
+            }, notes);
+
+            bgmSequence.loop = true;
+            bgmSequence.loopEnd = "6:2:0";
+            Tone.Transport.bpm.value = 110;
+        }
+
+        async function toggleBGM() {
+            await Tone.start();
+            setupBGM();
+
+            const bgmBtn = document.getElementById('bgmBtn');
+            const bgmIcon = document.getElementById('bgmIcon');
+            const bgmText = document.getElementById('bgmText');
+
+            if (!isPlayingBGM) {
+                Tone.Transport.start();
+                bgmSequence.start(0);
+                isPlayingBGM = true;
+                bgmIcon.className = "fa-solid fa-volume-high text-rose-500 animate-bounce";
+                bgmText.innerText = "ปิดเพลงวันเกิด 🔊";
+                showToast("🎵 เปิดเพลงวันเกิดเรียบร้อยแล้วค่ะ");
+            } else {
+                Tone.Transport.stop();
+                isPlayingBGM = false;
+                bgmIcon.className = "fa-solid fa-music text-rose-500";
+                bgmText.innerText = "เปิดเพลงวันเกิด 🎵";
+                showToast("🔇 ปิดเสียงเพลงแล้วค่ะ");
+            }
+        }
+
+        // Trigger Fireworks / Confetti
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#FF7B54', '#FFD1DC', '#FFB74D', '#FF9EAA', '#4EA8DE']
+                });
+            }
+        }
+
+        // Flip Birthday Card Event
+        function flipCard() {
+            const cardInner = document.getElementById('cardInner');
+            isCardFlipped = !isCardFlipped;
+
+            if (isCardFlipped) {
+                cardInner.classList.add('rotate-y-180');
+                triggerConfetti();
+                playMeowSound();
+            } else {
+                cardInner.classList.remove('rotate-y-180');
+            }
+        }
+
+        // Pet the Cat Interactive Logic
+        function petCat(event) {
+            petCount++;
+            document.getElementById('petCount').innerText = petCount;
+
+            // Play Meow Sound Effect
+            playMeowSound();
+
+            // Speech Bubble Dynamic Updates
+            const bubble = document.getElementById('catBubble');
+            const reactions = [
+                "เหมียว~ สบายหัวจังเลยค่ะ 🐱",
+                "พรวันเกิดส่งตรงถึงคุณน้าแล้วน้า! ✨",
+                "รักคุณน้าที่สุดเลยเหมียว~ 💕",
+                "ขอให้คุณน้ามีความสุขมากๆ น้า 🎉",
+                "ฟินเลย~ ลูบอีกๆ เหมียว~ 🐾"
+            ];
+            const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
+            if (bubble) {
+                bubble.innerText = randomReaction;
+            }
+
+            // Animate Cat Head Squish
+            const mascot = document.getElementById('catMascot');
+            if (mascot) {
+                mascot.classList.add('scale-95');
+                setTimeout(() => mascot.classList.remove('scale-95'), 150);
+            }
+
+            // Spawn Flying Heart Animation safely
+            spawnFloatingHeart(event);
+        }
+
+        function spawnFloatingHeart(evt) {
+            const container = document.getElementById('heartContainer');
+            if (!container) return;
+
+            const heart = document.createElement('div');
+            
+            // Random heart icons or paws
+            const icons = ['❤️', '💖', '🐾', '🌸', '✨'];
+            heart.innerText = icons[Math.floor(Math.random() * icons.length)];
+            
+            heart.className = 'absolute text-xl select-none pointer-events-none transition-all duration-1000 ease-out z-30';
+            
+            let x = 100;
+            let y = 100;
+
+            // Strict check to ensure getBoundingClientRect exists and is a callable function
+            const catMascot = document.getElementById('catMascot');
+            const targetEl = container || catMascot;
+
+            if (targetEl && typeof targetEl.getBoundingClientRect === 'function') {
+                const rect = targetEl.getBoundingClientRect();
+                x = rect.width / 2;
+                y = rect.height / 2;
+
+                if (evt && typeof evt.clientX === 'number' && typeof evt.clientY === 'number') {
+                    x = evt.clientX - rect.left - 10;
+                    y = evt.clientY - rect.top - 10;
+                }
+            } else if (evt && evt.target && typeof evt.target.getBoundingClientRect === 'function') {
+                const rect = evt.target.getBoundingClientRect();
+                x = rect.width / 2;
+                y = rect.height / 2;
+            }
+
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            heart.style.opacity = '1';
+            heart.style.transform = 'translateY(0px) scale(1)';
+
+            container.appendChild(heart);
+
+            // Animate moving upwards and fading out
+            setTimeout(() => {
+                const randomX = (Math.random() - 0.5) * 40;
+                heart.style.opacity = '0';
+                heart.style.transform = `translate(${randomX}px, -60px) scale(1.4)`;
+            }, 50);
+
+            setTimeout(() => {
+                heart.remove();
+            }, 1050);
+        }
+
+        // Random Blessing Generator
+        // Add User Birthday Wish to Board (Saves to Cloud Storage)
+        async function addWishMessage() {
+            const nameInput = document.getElementById('senderName');
+            const wishInput = document.getElementById('wishText');
+            
+            const name = nameInput.value.trim() || 'ผู้หวังดี';
+            const wish = wishInput.value.trim();
+
+            if (!wish) {
+                showToast('⚠️ กรุณาพิมพ์ข้อความอวยพรก่อนแปะโน้ตน้า');
+                return;
+            }
+
+            try {
+                if (window.db && window.addDoc && window.collection && window.appId) {
+                    const wishesCol = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'wishes');
+                    await window.addDoc(wishesCol, {
+                        name: name,
+                        text: wish,
+                        timestamp: Date.now()
+                    });
+                } else {
+                    // Local fallback if offline
+                    const board = document.getElementById('wishBoard');
+                    const newCard = document.createElement('div');
+                    newCard.className = 'bg-white p-4 rounded-2xl shadow-sm border border-amber-100 relative animate-float';
+                    newCard.innerHTML = `
+                        <span class="absolute top-3 right-3 text-rose-400 text-xs"><i class="fa-solid fa-heart"></i></span>
+                        <p class="text-xs text-rose-500 font-bold mb-1">จาก: ${escapeHtml(name)}</p>
+                        <p class="text-sm text-gray-700">${escapeHtml(wish)}</p>
+                    `;
+                    board.prepend(newCard);
+                }
+
+                // Reset inputs
+                wishInput.value = '';
+                showToast('📌 แปะโน้ตอวยพรเรียบร้อยแล้วค่ะ! คุณน้าจะเห็นข้อความนี้ด้วยน้า');
+                playMeowSound();
+                triggerConfetti();
+            } catch (e) {
+                console.error("Error adding wish:", e);
+                showToast('📌 แปะโน้ตอวยพรเรียบร้อยแล้วค่ะ!');
+            }
+        }
+
+        // Toast Helper Function
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            
+            toastMsg.innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            }, 3000);
+        }
+
+        // Helper to prevent HTML Injection
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initial launch confetti effect
+        window.onload = function() {
+            setTimeout(() => {
+                triggerConfetti();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
